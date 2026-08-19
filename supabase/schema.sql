@@ -90,3 +90,25 @@ create policy subscribers_read_own on public.subscribers
 
 create policy subscribers_update_own on public.subscribers
     for update to authenticated using (user_id = auth.uid());
+
+
+-- ── grants ───────────────────────────────────────────────────────────────
+-- Necessary, and easy to miss: a policy permits, but the role must also hold
+-- the underlying SQL privilege. Without these every request fails with
+-- "permission denied for table" rather than an RLS rejection. Older Supabase
+-- projects granted anon everything by default and leaned on RLS alone; newer
+-- ones grant nothing, so this must be explicit.
+--
+-- Each grant is the minimum the policies above actually use, so the two
+-- agree. Should RLS ever be disabled by accident, anon still cannot read or
+-- delete anything.
+
+grant insert          on public.tool_runs         to anon, authenticated;
+grant select          on public.tool_runs         to authenticated;
+grant insert          on public.survey_responses  to anon, authenticated;
+grant select, insert, update on public.subscribers to authenticated;
+
+-- bigserial primary keys draw from a sequence, and inserting requires USAGE
+-- on it — otherwise the insert is refused despite the table grant above.
+grant usage on sequence public.tool_runs_id_seq        to anon, authenticated;
+grant usage on sequence public.survey_responses_id_seq to anon, authenticated;
