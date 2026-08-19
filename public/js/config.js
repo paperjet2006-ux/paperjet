@@ -2,8 +2,8 @@
    carries no privileges of its own; every table is behind row-level security,
    which is where access is actually decided. */
 window.PJ_CONFIG = {
-    supabaseUrl: 'https://drsmavzgoxjpughgjgmm.supabase.co',
-    supabaseKey: 'sb_publishable_xscJqg1ZXgCMnLLro1y9qg__nHS7tI0',
+    supabaseUrl: 'https://ijjrbzglzajdzxepndvs.supabase.co',
+    supabaseKey: 'sb_publishable_YY8PGtsmg3dUPJdWVmtzDQ_stJ91hy-',
     logUsage: true,
     survey: true
 };
