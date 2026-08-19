@@ -1,0 +1,15 @@
+{
+  "name": "paperjet",
+  "version": "1.0.0",
+  "description": "PDF tools that run entirely in the browser",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "tesseract.js": "^5.1.1"
+  },
+  "private": true
+}
