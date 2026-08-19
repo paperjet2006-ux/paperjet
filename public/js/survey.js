@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   MANIFEST PDF — "who are you, and what is this for?"
+   PAPERJET — "who are you, and what is this for?"
    ═══════════════════════════════════════════════════════════════════════════
 
    Asked ONCE per browser, and only after a tool has actually produced
@@ -103,7 +103,7 @@ function paint() {
             </select>
         </div>
         <div class="field">
-            <label for="svUse">What do you mostly use Manifest PDF for?</label>
+            <label for="svUse">What do you mostly use PaperJET for?</label>
             <select class="input" id="svUse">
                 <option value="">Choose one…</option>${opt(USES, answers.use_case)}
             </select>
@@ -142,7 +142,7 @@ function paint() {
         </div>
         <label class="consent">
             <input type="checkbox" id="svConsent">
-            <span>Store my details so Manifest PDF can email me about new tools. I can ask for
+            <span>Store my details so PaperJET can email me about new tools. I can ask for
                   them to be deleted at any time. My documents are never uploaded or stored
                   — see the <a href="/privacy" target="_blank">privacy policy</a>.</span>
         </label>

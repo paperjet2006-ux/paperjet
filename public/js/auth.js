@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   MANIFEST PDF — accounts and email capture
+   PAPERJET — accounts and email capture
    ═══════════════════════════════════════════════════════════════════════════
 
    Deliberately optional. Every tool on this site works signed out, and nothing

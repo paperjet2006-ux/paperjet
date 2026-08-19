@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   ACSPL PDF TOOLS — Compress · Merge · Split
+   PAPERJET — Compress · Merge · Split
    ═══════════════════════════════════════════════════════════════════════════
 
    Why this runs entirely in the browser, and never touches the server:

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tools.activecargosolutions.in/sitemap.xml
+Sitemap: https://paperjet-azure.vercel.app/sitemap.xml

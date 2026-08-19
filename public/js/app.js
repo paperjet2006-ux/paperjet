@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   MANIFEST PDF — UI
+   PAPERJET — UI
    ═══════════════════════════════════════════════════════════════════════════
    The engine (pdf-engine.js) and the OCR module (ocr.js) know nothing about
    this file; everything here is presentation and orchestration. One entry in
@@ -706,7 +706,7 @@ function toast(m, kind) {
 window.pjToast = toast;
 
 window.pjPrivacy = function () {
-    alert('Manifest PDF privacy, in short:\n\n' +
+    alert('PaperJET privacy, in short:\n\n' +
         '· Your documents are never uploaded. Every tool runs inside your browser, ' +
         'so there is nowhere for us to store them even if we wanted to.\n\n' +
         '· If you create an account we store your email address, so you can sign in ' +
