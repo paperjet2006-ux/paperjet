@@ -13,6 +13,15 @@
 const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
 const TO         = Deno.env.get('NOTIFY_TO') ?? 'paperjet2006@gmail.com';
 
+/* Shared secret sent by the database webhook as x-webhook-secret.
+ *
+ * JWT verification is off on this function, because the webhook authenticates
+ * with a publishable key rather than a legacy-signed JWT. That leaves the
+ * endpoint publicly callable, and the project ref is readable in the site's
+ * config.js — so the URL is derivable by anyone viewing source. Without this
+ * check a stranger could POST repeatedly and flood the inbox. */
+const HOOK_SECRET = Deno.env.get('WEBHOOK_SECRET');
+
 // Resend's shared sender. Works with no domain of your own, but may only
 // deliver to the address that owns the Resend account — which is why the
 // account must be opened with the same address as TO above. Swap this for
@@ -40,9 +49,15 @@ const FIELDS: [string, string][] = [
 Deno.serve(async (req) => {
     if (req.method !== 'POST') return new Response('POST only', { status: 405 });
 
-    if (!RESEND_KEY) {
-        console.error('RESEND_API_KEY is not set');
+    if (!RESEND_KEY || !HOOK_SECRET) {
+        console.error('RESEND_API_KEY or WEBHOOK_SECRET is not set');
         return new Response('misconfigured', { status: 500 });
+    }
+
+    // Rejected before the body is read, so an unauthenticated caller cannot
+    // make this function do any work at all.
+    if (req.headers.get('x-webhook-secret') !== HOOK_SECRET) {
+        return new Response('forbidden', { status: 403 });
     }
 
     let record: Record<string, unknown>;
