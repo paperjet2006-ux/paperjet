@@ -944,7 +944,7 @@ window.pjRun = async function () {
         // Only ever after something actually worked, and at most once.
         if (window.PjSurvey) window.PjSurvey.maybeAsk(S.tool);
     } catch (e) {
-        console.error('[manifest]', e);
+        console.error('[paperjet]', e);
         S.lastDiag = diagnostics(e);
         $('prog').style.display = 'none';
         $('result').innerHTML = `<div class="result bad">${head("Couldn't finish", 'error')}
