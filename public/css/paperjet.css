@@ -13,12 +13,12 @@
     --bg-2:      #0a0c14;
     --surface:   #0e1119;
     --surface-2: #141824;
-    --line:      #1e2434;
-    --line-2:    #2a3348;
+    --line:      #262e42;
+    --line-2:    #333d56;
 
     --ink:   #eef2ff;
-    --ink-2: #9aa6c4;
-    --ink-3: #5d6785;
+    --ink-2: #a6b1cd;   /* 8.80:1 on --surface */
+    --ink-3: #828fb0;   /* 5.85:1 — was #5d6785 at 3.36:1, under AA */
 
     --cyan:    #00e5ff;
     --magenta: #ff2d95;
@@ -48,6 +48,12 @@ html, body {
     color: var(--ink);
     font-family: var(--font);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Space Grotesk ships real 400-800 weights, so let the browser use them
+       instead of synthesising anything, and keep numerals aligned in the
+       size/percentage readouts. */
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
     overflow-x: hidden;
 }
 
@@ -98,7 +104,7 @@ html, body {
 }
 .logo {
     display: flex; align-items: center; gap: 10px;
-    font-weight: 800; font-size: 18px; letter-spacing: -.4px;
+    font-weight: 800; font-size: 19px; letter-spacing: -.4px;
     text-decoration: none; color: var(--ink); cursor: pointer;
     background: none; border: none; font-family: var(--font); padding: 0;
 }
@@ -113,7 +119,7 @@ html, body {
 .hdr-spacer { flex: 1; }
 .hdr-safe {
     display: inline-flex; align-items: center; gap: 7px;
-    font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
     letter-spacing: .3px;
 }
 .hdr-safe svg { width: 13px; height: 13px; color: var(--lime); }
@@ -125,7 +131,7 @@ html, body {
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    font-family: var(--font); font-size: 13.5px; font-weight: 700;
+    font-family: var(--font); font-size: 14.5px; font-weight: 700;
     padding: 11px 18px; border-radius: var(--r-sm);
     border: 1px solid var(--line-2); background: var(--surface-2); color: var(--ink);
     cursor: pointer; text-decoration: none;
@@ -142,15 +148,15 @@ html, body {
     box-shadow: 0 0 26px -6px var(--tool);
 }
 .btn-primary:hover { color: #04060d; filter: brightness(1.1); box-shadow: 0 0 34px -4px var(--tool); }
-.btn-lg { padding: 14px 26px; font-size: 15px; }
-.btn-sm { padding: 7px 12px; font-size: 12px; }
+.btn-lg { padding: 14px 26px; font-size: 16px; }
+.btn-sm { padding: 7px 12px; font-size: 13px; }
 .btn-ghost { background: transparent; }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero { padding: 74px 0 42px; text-align: center; }
 .kicker {
     display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: 1.6px;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 1.6px;
     text-transform: uppercase; color: var(--cyan);
     border: 1px solid rgba(0,229,255,.3); border-radius: 999px;
     padding: 6px 14px; background: rgba(0,229,255,.06);
@@ -165,10 +171,15 @@ html, body {
     filter: drop-shadow(0 0 26px rgba(0,229,255,.32));
 }
 .hero p {
-    margin: 20px auto 0; max-width: 620px; font-size: 16.5px; line-height: 1.65;
+    margin: 20px auto 0; max-width: 620px; font-size: 17.5px; line-height: 1.65;
     color: var(--ink-2);
 }
-.hero-note { margin-top: 14px; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+/* Four claims separated by dots. At the larger size the line can wrap, and it
+   must break BETWEEN claims — "Works offline / once loaded" reads as a
+   different, worse promise than the one being made. */
+.hero-note { margin-top: 14px; font-family: var(--mono); font-size: 13px; color: var(--ink-3);
+    max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+.hero-note span { white-space: nowrap; }
 
 /* ── Tool grid ────────────────────────────────────────────────────────────── */
 .grid-tools {
@@ -199,11 +210,11 @@ html, body {
     color: var(--tool); margin-bottom: 14px;
 }
 .tool-ico svg { width: 19px; height: 19px; }
-.tool-name { font-size: 15.5px; font-weight: 800; letter-spacing: -.3px; }
-.tool-desc { margin-top: 6px; font-size: 12.5px; line-height: 1.55; color: var(--ink-2); }
+.tool-name { font-size: 16.5px; font-weight: 800; letter-spacing: -.3px; }
+.tool-desc { margin-top: 6px; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
 .tool-tag {
     position: absolute; top: 14px; right: 14px;
-    font-family: var(--mono); font-size: 9.5px; letter-spacing: .8px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .8px;
     text-transform: uppercase; padding: 3px 7px; border-radius: 5px;
     background: color-mix(in srgb, var(--lime) 15%, transparent);
     color: var(--lime); border: 1px solid color-mix(in srgb, var(--lime) 32%, transparent);
@@ -213,8 +224,8 @@ html, body {
 .ws { display: none; padding: 22px 0 60px; }
 .ws.on { display: block; }
 .ws-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.ws-title { font-size: 24px; font-weight: 800; letter-spacing: -.7px; }
-.ws-meta { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.ws-title { font-size: 26px; font-weight: 800; letter-spacing: -.7px; }
+.ws-meta { font-family: var(--mono); font-size: 13px; color: var(--ink-3); }
 
 .ws-body { display: grid; gap: 16px; grid-template-columns: minmax(0,1fr) 340px; align-items: start; }
 @media (max-width: 940px) { .ws-body { grid-template-columns: minmax(0,1fr); } }
@@ -227,7 +238,7 @@ html, body {
     display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
     margin-bottom: 14px;
 }
-.panel-head h3 { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: -.2px; }
+.panel-head h3 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: -.2px; }
 
 /* ── Drop zone ────────────────────────────────────────────────────────────── */
 .drop {
@@ -255,8 +266,8 @@ html, body {
 }
 .drop-hex svg { width: 100%; height: 100%; }
 .drop:hover .drop-hex, .drop.over .drop-hex { transform: translateY(-5px) scale(1.05); }
-.drop-main { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -.3px; }
-.drop-sub { margin-top: 7px; font-size: 12.5px; color: var(--ink-3); }
+.drop-main { font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -.3px; }
+.drop-sub { margin-top: 7px; font-size: 13.5px; color: var(--ink-3); }
 .file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 /* ── File chips ───────────────────────────────────────────────────────────── */
@@ -264,15 +275,15 @@ html, body {
 .file {
     display: flex; align-items: center; gap: 10px; padding: 10px 12px;
     border: 1px solid var(--line); border-radius: var(--r-sm);
-    background: var(--surface-2); font-size: 13px;
+    background: var(--surface-2); font-size: 14px;
 }
 .file-ico { color: var(--tool); display: grid; place-items: center; }
 .file-ico svg { width: 16px; height: 16px; }
 .file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.file-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.file-meta { font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; }
 .file-x {
     border: none; background: none; color: var(--ink-3); cursor: pointer;
-    font-size: 17px; line-height: 1; padding: 2px 5px; border-radius: 6px;
+    font-size: 18px; line-height: 1; padding: 2px 5px; border-radius: 6px;
 }
 .file-x:hover { color: var(--red); background: rgba(255,77,94,.1); }
 
@@ -294,7 +305,7 @@ html, body {
 .page canvas, .page img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .page-n {
     position: absolute; right: 5px; bottom: 5px;
-    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
     background: rgba(5,6,10,.82); color: var(--ink); padding: 2px 6px; border-radius: 5px;
 }
 .page-skel { background: linear-gradient(100deg, #12151f 30%, #1a1f2e 50%, #12151f 70%); }
@@ -316,7 +327,7 @@ html, body {
    the original. */
 .page-src {
     position: absolute; left: 5px; bottom: 5px;
-    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
     background: rgba(5,6,10,.62); color: var(--ink); padding: 2px 5px; border-radius: 5px;
     opacity: 0; transition: opacity .14s var(--ease); pointer-events: none;
 }
@@ -362,23 +373,23 @@ html, body {
     content: ''; width: 7px; height: 7px; border-radius: 50%;
     background: var(--tool); box-shadow: 0 0 8px var(--tool);
 }
-.radio-t { font-size: 13px; font-weight: 700; }
-.radio-d { margin-top: 3px; font-size: 11.5px; line-height: 1.5; color: var(--ink-3); }
+.radio-t { font-size: 14px; font-weight: 700; }
+.radio-d { margin-top: 3px; font-size: 12.5px; line-height: 1.5; color: var(--ink-3); }
 
 .field { margin-bottom: 13px; }
 .field label {
-    display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .9px;
+    display: block; font-family: var(--mono); font-size: 11.5px; letter-spacing: .9px;
     text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
 }
 .input, select.input {
     width: 100%; padding: 10px 12px; border-radius: var(--r-sm);
     border: 1px solid var(--line-2); background: var(--bg-2); color: var(--ink);
-    font-family: var(--font); font-size: 13.5px; outline: none;
+    font-family: var(--font); font-size: 14.5px; outline: none;
     transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
 }
 .input:focus { border-color: var(--tool); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tool) 18%, transparent); }
 .range { width: 100%; accent-color: var(--tool); }
-.blurb { font-size: 12.5px; line-height: 1.65; color: var(--ink-2); margin-bottom: 16px; }
+.blurb { font-size: 13.5px; line-height: 1.65; color: var(--ink-2); margin-bottom: 16px; }
 
 /* ── Progress ─────────────────────────────────────────────────────────────── */
 .prog { margin-bottom: 14px; }
@@ -388,7 +399,7 @@ html, body {
     background: linear-gradient(90deg, var(--tool), var(--tool-2));
     box-shadow: 0 0 14px var(--tool); transition: width .25s var(--ease);
 }
-.prog-label { margin-top: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+.prog-label { margin-top: 8px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
 
 /* ── Result ───────────────────────────────────────────────────────────────── */
 .result { border-radius: var(--r-sm); border: 1px solid var(--line); padding: 15px; margin-bottom: 13px; }
@@ -396,13 +407,13 @@ html, body {
 .result.warn { border-color: color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 7%, transparent); }
 .result.bad  { border-color: color-mix(in srgb, var(--red) 40%, transparent);  background: color-mix(in srgb, var(--red) 7%, transparent); }
 .result-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.result-big { font-size: 19px; font-weight: 800; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.result-big { font-size: 20px; font-weight: 800; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
 .result-pill {
-    font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 3px 9px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 3px 9px;
     border-radius: 999px; background: var(--lime); color: #04060d;
 }
 .result.bad .result-pill { background: var(--red); color: #fff; }
-.result-msg { margin-top: 9px; font-size: 12.5px; line-height: 1.6; color: var(--ink-2); }
+.result-msg { margin-top: 9px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
 /* One line, always. A download button is a fixed-size control, not a place to
    render a filename — a long one wrapped to three lines and was clipped by the
    result panel. The name is shortened in the middle by the script that builds
@@ -414,14 +425,14 @@ html, body {
 }
 
 .diag { margin-top: 10px; }
-.diag summary { font-size: 11px; font-weight: 700; color: var(--ink-3); cursor: pointer; list-style: none; }
+.diag summary { font-size: 12px; font-weight: 700; color: var(--ink-3); cursor: pointer; list-style: none; }
 .diag summary::-webkit-details-marker { display: none; }
 .diag summary::before { content: '▸ '; }
 .diag[open] summary::before { content: '▾ '; }
 .diag pre {
     margin: 8px 0 0; padding: 9px 10px; border-radius: 8px;
     background: rgba(0,0,0,.35); border: 1px solid var(--line);
-    font-family: var(--mono); font-size: 10.5px; line-height: 1.5; color: var(--ink-3);
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.5; color: var(--ink-3);
     white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto;
 }
 
@@ -430,7 +441,7 @@ html, body {
     position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 90px);
     z-index: 90; padding: 12px 20px; border-radius: 999px;
     background: var(--surface-2); border: 1px solid var(--line-2); color: var(--ink);
-    font-size: 13px; font-weight: 600; box-shadow: 0 14px 40px -12px #000;
+    font-size: 14px; font-weight: 600; box-shadow: 0 14px 40px -12px #000;
     opacity: 0; transition: transform .3s var(--bounce), opacity .3s var(--ease);
     pointer-events: none; max-width: 90vw; text-align: center;
 }
@@ -451,20 +462,20 @@ html, body {
     border: 1px solid var(--line-2);
     box-shadow: 0 30px 90px -30px #000, 0 0 60px -30px var(--cyan);
 }
-.modal-card h2 { margin: 0 0 6px; font-size: 21px; letter-spacing: -.6px; }
-.modal-card .sub { margin: 0 0 20px; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
-.modal-x { float: right; border: none; background: none; color: var(--ink-3); font-size: 22px; cursor: pointer; line-height: 1; }
+.modal-card h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.6px; }
+.modal-card .sub { margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+.modal-x { float: right; border: none; background: none; color: var(--ink-3); font-size: 23px; cursor: pointer; line-height: 1; }
 .modal-x:hover { color: var(--ink); }
-.consent { display: flex; gap: 9px; align-items: flex-start; margin: 14px 0 4px; font-size: 11.5px; line-height: 1.55; color: var(--ink-3); }
+.consent { display: flex; gap: 9px; align-items: flex-start; margin: 14px 0 4px; font-size: 12.5px; line-height: 1.55; color: var(--ink-3); }
 .consent input { margin-top: 2px; accent-color: var(--cyan); flex: 0 0 auto; }
-.modal-alt { margin-top: 15px; font-size: 12.5px; color: var(--ink-3); text-align: center; }
-.modal-alt button { background: none; border: none; color: var(--cyan); cursor: pointer; font-family: var(--font); font-size: 12.5px; font-weight: 700; padding: 0; }
+.modal-alt { margin-top: 15px; font-size: 13.5px; color: var(--ink-3); text-align: center; }
+.modal-alt button { background: none; border: none; color: var(--cyan); cursor: pointer; font-family: var(--font); font-size: 13.5px; font-weight: 700; padding: 0; }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .ftr {
     border-top: 1px solid var(--line); margin-top: 40px; padding: 26px 0 40px;
     display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
-    font-size: 12px; color: var(--ink-3);
+    font-size: 13px; color: var(--ink-3);
 }
 .ftr a { color: var(--ink-2); text-decoration: none; }
 .ftr a:hover { color: var(--cyan); }
@@ -483,9 +494,9 @@ html, body {
 /* ── Prose (privacy page) ─────────────────────────────────────────────────── */
 .prose { max-width: 720px; margin: 0 auto; padding: 40px 0 70px; }
 .prose h1 { font-size: clamp(30px, 5vw, 44px); letter-spacing: -1.2px; margin: 0 0 10px; }
-.prose .lede { font-size: 16px; line-height: 1.7; color: var(--ink-2); margin: 0 0 8px; }
-.prose .updated { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-bottom: 30px; }
-.prose h2 { font-size: 19px; letter-spacing: -.4px; margin: 34px 0 10px; }
+.prose .lede { font-size: 17px; line-height: 1.7; color: var(--ink-2); margin: 0 0 8px; }
+.prose .updated { font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); margin-bottom: 30px; }
+.prose h2 { font-size: 20px; letter-spacing: -.4px; margin: 34px 0 10px; }
 .prose p, .prose li { font-size: 14.5px; line-height: 1.75; color: var(--ink-2); }
 .prose ul { padding-left: 20px; }
 .prose li { margin-bottom: 7px; }
@@ -497,9 +508,9 @@ html, body {
     border-radius: var(--r); padding: 18px 20px; margin: 26px 0;
 }
 .prose .callout p { color: var(--ink); margin: 0; }
-.prose table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+.prose table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
 .prose th, .prose td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); color: var(--ink-2); }
-.prose th { color: var(--ink); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; font-family: var(--mono); }
+.prose th { color: var(--ink); font-size: 13px; text-transform: uppercase; letter-spacing: .6px; font-family: var(--mono); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LIGHT THEME
@@ -523,12 +534,12 @@ html, body {
     --bg-2:      #ffffff;
     --surface:   #ffffff;
     --surface-2: #eef1f8;
-    --line:      #e0e5f0;
+    --line:      #d7dde9;
     --line-2:    #c6cee1;
 
     --ink:   #0d1017;
     --ink-2: #454e63;
-    --ink-3: #6b7489;
+    --ink-3: #5a6379;   /* 5.31:1 on --surface-2 — was 4.14:1 */
 
     /* Measured against --bg (#f4f6fb), not eyeballed. Each of these is used as
        small text somewhere — the hero kicker, prose links, the modal's text
@@ -616,7 +627,7 @@ html, body {
 
 /* "by ACSPL" in the header — quiet, but it answers "who made this?", which is
    the first thing anyone asks before handing a document to a website. */
-.hdr-by { font-family: var(--mono); font-size: 11px; letter-spacing: .3px;
+.hdr-by { font-family: var(--mono); font-size: 12px; letter-spacing: .3px;
     color: var(--ink-3); text-decoration: none; white-space: nowrap; }
 .hdr-by b { color: var(--ink-2); font-weight: 700; }
 .hdr-by:hover { color: var(--cyan); }

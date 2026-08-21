@@ -40,86 +40,90 @@ const S = {
 const ico = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
     stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 
+/* Accents are CSS variables, not hex. The light theme redefines each of these
+   to an accessible twin (measured >=4.5:1, since --tool is used for icons and
+   text as well as borders); writing raw hex here would set the dark-theme neon
+   on documentElement and override that, which is exactly what it used to do. */
 const TOOLS = {
     ocr: {
-        name: 'OCR a scan', accent: '#00e5ff', accent2: '#ff2d95', tag: 'new',
+        name: 'OCR a scan', accent: 'var(--cyan)', accent2: 'var(--magenta)', tag: 'new',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>'),
         desc: 'Read the words out of a scanned document — and make it searchable.',
         blurb: 'A scan is a picture of a document: there is no text inside it to find, copy or search. This reads the words off the picture and puts them back in. The default keeps your scan exactly as it looks and lays the text over it invisibly, so nothing is lost even where the reading is imperfect.'
     },
     compress: {
-        name: 'Compress', accent: '#ff4d5e', accent2: '#ff2d95',
+        name: 'Compress', accent: 'var(--red)', accent2: 'var(--magenta)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/>'),
         desc: 'Shrink a PDF as far as it goes without the quality showing.',
         blurb: 'Images inside the file are recompressed but text stays text, so the result is still selectable and searchable. Need it smaller? Run the result through again at a stronger level.'
     },
     merge: {
-        name: 'Merge', accent: '#00e5ff', accent2: '#a06bff',
+        name: 'Merge', accent: 'var(--cyan)', accent2: 'var(--violet)',
         multi: true, accept: 'application/pdf',
         icon: ico('<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>'),
         desc: 'Join several PDFs into one, in the order you list them.',
         blurb: 'Every page is copied across exactly as it was — no re-rendering, so nothing is lost. They merge in the order shown; remove one and drop it back to move it to the end.'
     },
     split: {
-        name: 'Split', accent: '#a06bff', accent2: '#00e5ff',
+        name: 'Split', accent: 'var(--violet)', accent2: 'var(--cyan)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M12 3v18M5 8l-2 4 2 4M19 8l2 4-2 4"/>'),
         desc: 'Pull pages out, drop pages, or break a file into pieces.',
         blurb: 'Pick pages on the grid, or type a range like 1-3, 7, 12-. Nothing is re-rendered — the pages you keep are byte-for-byte the pages you had.'
     },
     organize: {
-        name: 'Organize', accent: '#a06bff', accent2: '#ffb020', tag: 'new',
+        name: 'Organize', accent: 'var(--violet)', accent2: 'var(--amber)', tag: 'new',
         multi: false, accept: 'application/pdf',
         icon: ico('<rect x="2.5" y="4" width="7" height="9" rx="1.4"/><rect x="14.5" y="11" width="7" height="9" rx="1.4"/><path d="M12.6 7.5h4.2"/><path d="M15.1 5.6l2.1 1.9-2.1 1.9"/><path d="M11.4 16.5H7.2"/><path d="M8.9 14.6l-2.1 1.9 2.1 1.9"/>'),
         desc: 'Drag pages into the order you want them.',
         blurb: 'The tool for a file that arrived in the wrong order. Drag any page to move it; each one can also be turned, duplicated or removed on its own. Pages are copied, never re-rendered, so nothing loses quality — and nothing is written until you press the button.'
     },
     rotate: {
-        name: 'Rotate', accent: '#ffb020', accent2: '#ff2d95',
+        name: 'Rotate', accent: 'var(--amber)', accent2: 'var(--magenta)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>'),
         desc: 'Turn pages the right way up. Completely lossless.',
         blurb: 'Only the rotation flag moves — not a single pixel is re-encoded. Pick pages on the grid to turn just those, or leave none picked to turn the whole document.'
     },
     numbers: {
-        name: 'Page numbers', accent: '#00e5ff', accent2: '#b6ff3a',
+        name: 'Page numbers', accent: 'var(--cyan)', accent2: 'var(--lime)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M4 4h16v16H4z"/><path d="M9 16h6"/><path d="M12 16v-6l-2 1"/>'),
         desc: 'Stamp page numbers where you want them.',
         blurb: 'Drawn as real text, so they stay crisp at any zoom. Sideways pages are handled properly — "bottom centre" means the bottom centre of the page as you see it, not as it happens to be stored.'
     },
     watermark: {
-        name: 'Watermark', accent: '#ff2d95', accent2: '#a06bff',
+        name: 'Watermark', accent: 'var(--magenta)', accent2: 'var(--violet)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M12 3l7 7a7 7 0 1 1-14 0z"/>'),
         desc: 'Lay a word across every page — DRAFT, COPY, a client name.',
         blurb: 'Real text at the opacity you choose, so it stays crisp at any zoom and never covers what is underneath. On a sideways page it stays diagonal to the reader, not to the file.'
     },
     tojpg: {
-        name: 'PDF → JPG', accent: '#b6ff3a', accent2: '#00e5ff',
+        name: 'PDF → JPG', accent: 'var(--lime)', accent2: 'var(--cyan)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M3 5h18v14H3z"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5L5 19"/>'),
         desc: 'One image per page, at whatever resolution you need.',
         blurb: 'Every page is rendered at the resolution you pick and delivered as a zip. 150 DPI reads well on screen; 300 is what you want if the images are going to be printed.'
     },
     fromjpg: {
-        name: 'JPG → PDF', accent: '#b6ff3a', accent2: '#ffb020',
+        name: 'JPG → PDF', accent: 'var(--lime)', accent2: 'var(--amber)',
         multi: true, accept: 'image/*',
         icon: ico('<path d="M4 3h16v18H4z"/><path d="M9 9h6v6H9z"/>'),
         desc: 'Turn photos or scans into a single PDF.',
         blurb: 'One page per image, in the order listed. JPEGs and PNGs go in untouched, so the pictures stay exactly as sharp as they were. Anything else is converted first.'
     },
     toword: {
-        name: 'PDF → Word', accent: '#a06bff', accent2: '#00e5ff',
+        name: 'PDF → Word', accent: 'var(--violet)', accent2: 'var(--cyan)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/>'),
         desc: 'Pull the text into an editable Word document.',
         blurb: 'Works on PDFs a system generated — invoices, statements, portal printouts. The words and their reading order come across; layout, images and exact fonts do not. If the file is a scan you will be told so, and pointed at OCR.'
     },
     toexcel: {
-        name: 'PDF → Excel', accent: '#b6ff3a', accent2: '#00e5ff',
+        name: 'PDF → Excel', accent: 'var(--lime)', accent2: 'var(--cyan)',
         multi: false, accept: 'application/pdf',
         icon: ico('<path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/>'),
         desc: 'Recover a table into a spreadsheet you can actually sum.',
