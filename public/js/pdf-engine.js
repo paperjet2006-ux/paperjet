@@ -875,6 +875,42 @@ async function rotatePages(bytes, cfg) {
     return { bytes: await doc.save({ useObjectStreams: true }), pages: touched };
 }
 
+/**
+ * Rebuild a document in a given page order, with per-page turns and removals.
+ *
+ * @param order  [{ p, r }, …] — p is the page number in the ORIGINAL file, r a
+ *               turn in degrees to add to whatever that page already carried.
+ *               The array IS the new document: its length is the page count,
+ *               its order is the page order, and anything missing is dropped.
+ *
+ * Pages are copied, never re-rendered, so this is lossless exactly like merge
+ * and split. A page may legitimately appear twice — duplicating one is a normal
+ * thing to want in a bundle — so nothing here deduplicates.
+ */
+async function organisePages(bytes, order) {
+    const L = await loadPdfLib();
+    if (!order || !order.length) throw new Error('There are no pages left to save');
+
+    const src = await L.PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false });
+    const total = src.getPageCount();
+    const bad = order.find(o => !(o.p >= 1 && o.p <= total));
+    if (bad) throw new Error(`Page ${bad.p} is not in this file`);
+
+    const out = await L.PDFDocument.create();
+    // copyPages takes the whole list at once so a page used twice is embedded
+    // once and referenced twice, rather than copied twice into the output.
+    const copied = await out.copyPages(src, order.map(o => o.p - 1));
+    copied.forEach((page, i) => {
+        const add = ((order[i].r || 0) % 360 + 360) % 360;
+        if (add) {
+            const now = page.getRotation().angle || 0;
+            page.setRotation(L.degrees(((now + add) % 360 + 360) % 360));
+        }
+        out.addPage(page);
+    });
+    return { bytes: await out.save({ useObjectStreams: true }), pages: order.length };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // STAMPING — page numbers and watermarks
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1347,7 +1383,7 @@ async function imagesToPdf(files, cfg, report) {
 window.PdfTools = {
     extractLayout, buildDocx, buildXlsx, toOffice, imagesToPdf,
     compress, merge, split, extractPages, parsePageSpec,
-    rotatePages, numberPages, watermarkPdf, pagesToImages,
+    rotatePages, organisePages, numberPages, watermarkPdf, pagesToImages,
     makeZip, fmtSize, pct, PRESETS,
     loadPdfLib, loadPdfJs
 };

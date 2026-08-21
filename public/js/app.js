@@ -69,6 +69,13 @@ const TOOLS = {
         desc: 'Pull pages out, drop pages, or break a file into pieces.',
         blurb: 'Pick pages on the grid, or type a range like 1-3, 7, 12-. Nothing is re-rendered — the pages you keep are byte-for-byte the pages you had.'
     },
+    organize: {
+        name: 'Organize', accent: '#a06bff', accent2: '#ffb020', tag: 'new',
+        multi: false, accept: 'application/pdf',
+        icon: ico('<rect x="2.5" y="4" width="7" height="9" rx="1.4"/><rect x="14.5" y="11" width="7" height="9" rx="1.4"/><path d="M12.6 7.5h4.2"/><path d="M15.1 5.6l2.1 1.9-2.1 1.9"/><path d="M11.4 16.5H7.2"/><path d="M8.9 14.6l-2.1 1.9 2.1 1.9"/>'),
+        desc: 'Drag pages into the order you want them.',
+        blurb: 'The tool for a file that arrived in the wrong order. Drag any page to move it; each one can also be turned, duplicated or removed on its own. Pages are copied, never re-rendered, so nothing loses quality — and nothing is written until you press the button.'
+    },
     rotate: {
         name: 'Rotate', accent: '#ffb020', accent2: '#ff2d95',
         multi: false, accept: 'application/pdf',
@@ -185,13 +192,27 @@ async function addFiles(list) {
         if (!t.multi) break;
     }
     S.selected.clear();
+    // A new file means a new arrangement — the old one described a document
+    // that is no longer loaded.
+    S.order = []; S.orderFor = '';
     render();
-    if (S.files.length && TOOLS[S.tool].accept === 'application/pdf') thumbs();
+    if (S.files.length && TOOLS[S.tool].accept === 'application/pdf') {
+        if (S.tool === 'organize') organizeGrid(); else thumbs();
+    }
 }
 
-window.pjRemove = function (i) { S.files.splice(i, 1); S.selected.clear(); render(); if (S.files.length) thumbs(); else $('pages').hidden = true; };
+window.pjRemove = function (i) {
+    S.files.splice(i, 1); S.selected.clear();
+    S.order = []; S.orderFor = '';
+    render();
+    if (S.files.length) { if (S.tool === 'organize') organizeGrid(); else thumbs(); }
+    else $('pages').hidden = true;
+};
 window.pjReset = function () {
     S.files = []; S.selected.clear(); S.lastDiag = '';
+    S.order = []; S.orderFor = '';
+    if (orgCleanup) { orgCleanup(); orgCleanup = null; }
+    if (orgObserver) { orgObserver.disconnect(); orgObserver = null; }
     if (S.lastUrl) { URL.revokeObjectURL(S.lastUrl); S.lastUrl = null; }
     $('result').innerHTML = ''; $('prog').style.display = 'none'; $('pages').hidden = true;
     $('pages').innerHTML = ''; $('fileInput').value = '';
@@ -234,6 +255,232 @@ async function thumbs() {
     } catch (e) { /* previews are a convenience; failing to draw one is not fatal */ }
 }
 
+
+/* ═══ Organize ══════════════════════════════════════════════════════════════
+   Every other tool asks you to describe pages in a box — "3, 7, 12-15". Putting
+   a bundle in order is where that breaks down: it is a thing you do by looking
+   at the pages, and no page-range syntax expresses "this annexure belongs
+   behind that invoice".
+
+   The arrangement is an ARRAY, not marks on the original: its order is the page
+   order, its length is the page count, and a page missing from it is a page
+   removed. Duplicating then falls out for free — the same page twice in the
+   array is the same page twice in the document.
+
+   This draws its own grid rather than reusing thumbs(), for one reason that
+   matters: thumbs() stops at 60 pages. Reordering a truncated view and
+   rebuilding from it would silently drop every page past the cap. Here every
+   page is present, and the canvases are drawn lazily as they come into view so
+   a 300-page file still opens at once.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+S.order = [];
+S.orderFor = '';
+
+function orderSig() {
+    const f = S.files[0];
+    return f ? `${f.name}|${f.size}|${f.pageCount}` : '';
+}
+
+function ensureOrder() {
+    const sig = orderSig();
+    if (!sig) { S.order = []; S.orderFor = ''; return; }
+    if (S.orderFor === sig && Array.isArray(S.order) && S.order.length) return;
+    S.order = Array.from({ length: S.files[0].pageCount || 0 }, (_, i) => ({ p: i + 1, r: 0 }));
+    S.orderFor = sig;
+}
+
+function orderChanged() {
+    const n = S.files[0]?.pageCount || 0;
+    return S.order.length !== n || S.order.some((o, i) => o.p !== i + 1 || o.r);
+}
+
+const ORG_ICONS = {
+    left:  '<path d="M15 18l-6-6 6-6"/>',
+    right: '<path d="M9 18l6-6-6-6"/>',
+    ccw:   '<path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+    cw:    '<path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+    del:   '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>',
+    copy:  '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
+};
+const orgBtn = (title, path, click, cls) =>
+    `<button type="button" class="org-btn ${cls || ''}" title="${title}" aria-label="${title}"
+             onclick="event.stopPropagation();${click}">${ico(path)}</button>`;
+
+let orgObserver = null, orgCleanup = null;
+
+/**
+ * The element that actually scrolls this grid, for the lazy-render observer.
+ *
+ * It matters which: an IntersectionObserver rooted on the viewport computes its
+ * pre-load margin against the viewport, so inside a container that scrolls on
+ * its own nothing is ever drawn AHEAD of the scroll — every drag down waits on
+ * a fresh render. The grid here sits in a container with its own max-height on
+ * a wide screen and in the page itself on a narrow one, so this is looked up
+ * rather than assumed.
+ */
+function scrollParent(el) {
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+        const oy = getComputedStyle(n).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return n;
+    }
+    return null;   // null = the viewport
+}
+
+function organizeGrid() {
+    const box = $('pages');
+    const f = S.files[0];
+    if (!box || !f) return;
+    ensureOrder();
+    const me = ++thumbToken;
+    box.hidden = false;
+
+    box.innerHTML = S.order.map((o, i) => `
+        <div class="page page-org page-skel${o.r % 180 ? ' turned' : ''}"
+             data-idx="${i}" data-p="${o.p}" draggable="true"
+             ondragstart="pjOrgDragStart(event,${i})" ondragend="pjOrgDragEnd(event)"
+             ondragover="pjOrgDragOver(event,${i})" ondrop="pjOrgDrop(event,${i})"
+             title="Drag to move">
+            <span class="page-n">${i + 1}</span>
+            <span class="page-src">was ${o.p}</span>
+            <div class="org-bar org-bar-top">
+                ${orgBtn('Duplicate this page', ORG_ICONS.copy, `pjOrgDuplicate(${i})`)}
+                ${orgBtn('Remove this page', ORG_ICONS.del, `pjOrgDelete(${i})`, 'danger')}
+            </div>
+            <div class="org-bar">
+                ${orgBtn('Move earlier', ORG_ICONS.left, `pjOrgMove(${i},${i - 1})`)}
+                ${orgBtn('Turn left', ORG_ICONS.ccw, `pjOrgRotate(${i},-90)`)}
+                ${orgBtn('Turn right', ORG_ICONS.cw, `pjOrgRotate(${i},90)`)}
+                ${orgBtn('Move later', ORG_ICONS.right, `pjOrgMove(${i},${i + 1})`)}
+            </div>
+        </div>`).join('');
+
+    // One render per ORIGINAL page, reused wherever it appears, so a duplicated
+    // page costs nothing to show.
+    const cache = new Map();
+    let doc = null, task = null;
+
+    const draw = async (el) => {
+        const p = Number(el.dataset.p);
+        try {
+            if (!doc) {
+                const pdfjs = await E().loadPdfJs();
+                if (me !== thumbToken) return;
+                task = pdfjs.getDocument({ data: f.bytes.slice(), isEvalSupported: false });
+                doc = await task.promise;
+            }
+            if (me !== thumbToken) return;
+            if (!cache.has(p)) {
+                const page = await doc.getPage(p);
+                const vp0 = page.getViewport({ scale: 1 });
+                const vp = page.getViewport({ scale: 150 / vp0.width });
+                const c = document.createElement('canvas');
+                c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+                const ctx = c.getContext('2d', { alpha: false });
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                page.cleanup();
+                cache.set(p, c.toDataURL('image/jpeg', 0.8));
+            }
+            if (me !== thumbToken || !el.isConnected) return;
+            const img = new Image();
+            img.src = cache.get(p);
+            const o = S.order[Number(el.dataset.idx)];
+            if (o && o.r) img.style.transform = `rotate(${o.r}deg)`;
+            el.classList.remove('page-skel');
+            el.insertBefore(img, el.firstChild);
+        } catch (e) { /* a preview that will not draw is not worth failing over */ }
+    };
+
+    if (orgObserver) orgObserver.disconnect();
+    orgObserver = new IntersectionObserver((entries, obs) => {
+        entries.forEach(en => { if (en.isIntersecting) { obs.unobserve(en.target); draw(en.target); } });
+    }, { root: scrollParent(box), rootMargin: '400px 0px' });
+    box.querySelectorAll('.page').forEach(el => orgObserver.observe(el));
+
+    orgCleanup = () => { try { if (task) task.destroy(); } catch (e) {} };
+}
+
+/** Re-mark positions and turns without redrawing any canvas. */
+function syncOrganize() {
+    const box = $('pages');
+    if (!box) return;
+    box.querySelectorAll('.page').forEach(el => {
+        const o = S.order[Number(el.dataset.idx)];
+        if (!o) return;
+        const n = el.querySelector('.page-n'); if (n) n.textContent = Number(el.dataset.idx) + 1;
+        const s = el.querySelector('.page-src'); if (s) s.textContent = 'was ' + o.p;
+        const art = el.querySelector('canvas, img');
+        if (art) art.style.transform = o.r ? `rotate(${o.r}deg)` : '';
+        el.classList.toggle('turned', !!(o.r % 180));
+    });
+    render();
+}
+
+function orgDirty() { $('result').innerHTML = ''; $('prog').style.display = 'none'; }
+
+window.pjOrgMove = function (from, to) {
+    if (from === to || from < 0 || from >= S.order.length) return;
+    to = Math.max(0, Math.min(S.order.length - 1, to));
+    S.order.splice(to, 0, S.order.splice(from, 1)[0]);
+    orgDirty(); organizeGrid(); render();
+};
+window.pjOrgRotate = function (i, d) {
+    const o = S.order[i]; if (!o) return;
+    o.r = ((o.r + d) % 360 + 360) % 360;
+    orgDirty(); syncOrganize();
+};
+window.pjOrgDelete = function (i) {
+    if (!S.order[i]) return;
+    if (S.order.length === 1) { toast('That is the only page left', 'err'); return; }
+    S.order.splice(i, 1);
+    orgDirty(); organizeGrid(); render();
+};
+window.pjOrgDuplicate = function (i) {
+    const o = S.order[i]; if (!o) return;
+    S.order.splice(i + 1, 0, { p: o.p, r: o.r });
+    orgDirty(); organizeGrid(); render();
+};
+window.pjOrgReverse = function () { S.order.reverse(); orgDirty(); organizeGrid(); render(); };
+window.pjOrgRotateAll = function (d) {
+    S.order.forEach(o => { o.r = ((o.r + d) % 360 + 360) % 360; });
+    orgDirty(); syncOrganize();
+};
+window.pjOrgReset = function () { S.orderFor = ''; ensureOrder(); orgDirty(); organizeGrid(); render(); };
+
+// ── Dragging ───────────────────────────────────────────────────────────────
+// The arrow buttons are not a fallback nobody uses: dragging tile 3 to position
+// 47 across a scrolling grid is genuinely awkward, and on a long file they win.
+let orgFrom = null;
+
+window.pjOrgDragStart = function (ev, i) {
+    orgFrom = i;
+    ev.dataTransfer.effectAllowed = 'move';
+    try { ev.dataTransfer.setData('text/plain', String(i)); } catch (e) {}  // Firefox needs data set
+    ev.currentTarget.classList.add('dragging');
+};
+window.pjOrgDragEnd = function (ev) {
+    orgFrom = null;
+    ev.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('#pages .page.over').forEach(el => el.classList.remove('over'));
+};
+window.pjOrgDragOver = function (ev, i) {
+    if (orgFrom === null) return;
+    ev.preventDefault();                        // without this, drop never fires
+    ev.dataTransfer.dropEffect = 'move';
+    const el = ev.currentTarget;
+    if (!el.classList.contains('over') && i !== orgFrom) {
+        document.querySelectorAll('#pages .page.over').forEach(x => x.classList.remove('over'));
+        el.classList.add('over');
+    }
+};
+window.pjOrgDrop = function (ev, i) {
+    ev.preventDefault(); ev.stopPropagation();
+    const from = orgFrom !== null ? orgFrom : parseInt(ev.dataTransfer.getData('text/plain'), 10);
+    orgFrom = null;
+    document.querySelectorAll('#pages .page.over').forEach(el => el.classList.remove('over'));
+    if (!isNaN(from)) window.pjOrgMove(from, i);
+};
 
 /**
  * Turn the thumbnails to show what Rotate is about to do. Purely visual — a CSS
@@ -313,6 +560,32 @@ function paintOptions() {
                     <input class="input" type="number" min="1" id="everyN" value="${S.everyN}"
                     oninput="pjSet('everyN', Math.max(1, +this.value||1))"></div>`;
             break;
+        case 'organize': {
+            ensureOrder();
+            const before = S.files[0] ? (S.files[0].pageCount || 0) : 0;
+            const now = S.order.length;
+            const turned = S.order.filter(o => o.r).length;
+            const moved = orderChanged();
+            h = `<div class="blurb" style="margin:0 0 14px">
+                    <strong>Drag any page</strong> to move it. Each page also has its own controls —
+                    nudge it one place, turn it, duplicate it or remove it — which is usually quicker
+                    than dragging across a long file.
+                 </div>
+                 <div class="opt-row" style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn-ghost" onclick="pjOrgRotateAll(90)">Turn all right</button>
+                    <button class="btn-ghost" onclick="pjOrgRotateAll(-90)">Turn all left</button>
+                    <button class="btn-ghost" onclick="pjOrgReverse()">Reverse order</button>
+                    <button class="btn-ghost" onclick="pjOrgReset()" ${moved ? '' : 'disabled'}>Start again</button>
+                 </div>
+                 <div class="blurb" style="margin:14px 0 0">${moved
+                    ? `<strong>${now} page${now === 1 ? '' : 's'}</strong> in the new order`
+                      + (now !== before ? ` (was ${before})` : '')
+                      + (turned ? `, ${turned} turned` : '') + '.'
+                    : `<strong>${before} page${before === 1 ? '' : 's'}</strong>, still in their original
+                       order — nothing changed yet.`}
+                    Nothing is written until you press the button.</div>`;
+            break;
+        }
         case 'rotate':
             // The pages themselves show the answer, so the labels only have to
             // name a direction. "90° right" is precise and still makes people
@@ -429,6 +702,7 @@ function render() {
 
 function runLabel() {
     return { ocr: 'Run OCR', compress: 'Compress', merge: 'Merge', split: 'Split',
+        organize: 'Save new order',
         rotate: 'Rotate', numbers: 'Add numbers', watermark: 'Add watermark',
         tojpg: 'Convert to JPG', fromjpg: 'Build PDF', toword: 'Convert to Word',
         toexcel: 'Convert to Excel' }[S.tool] || 'Run';
@@ -510,6 +784,27 @@ const RUN = {
                 head(r.pages + ' pages', fmtSize(r.bytes.length)) +
                 msg(`Taken from ${esc(f.name)} — the original on your computer is untouched.`));
         }
+    },
+    async organize() {
+        const f = S.files[0];
+        ensureOrder();
+        const before = f.pageCount || 0;
+        const distinct = new Set(S.order.map(o => o.p)).size;
+        const removed = Math.max(0, before - distinct);
+        const added = Math.max(0, S.order.length - distinct);
+        const turned = S.order.filter(o => o.r).length;
+
+        progress(0.3, 'Rebuilding the document');
+        const r = await E().organisePages(f.bytes, S.order);
+
+        const bits = [];
+        if (removed) bits.push(`${removed} removed`);
+        if (added) bits.push(`${added} duplicated`);
+        if (turned) bits.push(`${turned} turned`);
+        offer(new Blob([r.bytes], { type: 'application/pdf' }), f.name.replace(/\.pdf$/i, '') + '_organized.pdf',
+            head(r.pages + ' page' + (r.pages === 1 ? '' : 's'), 'reordered') +
+            msg(`Saved in the order you arranged${bits.length ? ' — ' + bits.join(', ') : ''}. `
+                + `Pages were copied across untouched, never re-rendered, so this is completely lossless.`));
     },
     async rotate() {
         const f = S.files[0];

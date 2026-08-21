@@ -299,6 +299,51 @@ html, body {
 }
 .page-skel { background: linear-gradient(100deg, #12151f 30%, #1a1f2e 50%, #12151f 70%); }
 
+/* ── Organize ─────────────────────────────────────────────────────────────── */
+/* A tile here is something you pick up and put down, so it says so. The gap a
+   page would drop into is marked on the tile itself rather than with an
+   insertion line — a line between tiles in a wrapping grid is ambiguous at the
+   end of every row. */
+.page-org { cursor: grab; }
+.page-org:active { cursor: grabbing; }
+.page-org.dragging { opacity: .4; transform: scale(.97); }
+.page-org.over { border-color: var(--tool);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tool) 45%, transparent);
+    transform: translateY(-3px); }
+.page-org.turned { border-color: var(--tool); }
+
+/* Where the page came from, so a reordered grid can still be checked against
+   the original. */
+.page-src {
+    position: absolute; left: 5px; bottom: 5px;
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    background: rgba(5,6,10,.62); color: var(--ink); padding: 2px 5px; border-radius: 5px;
+    opacity: 0; transition: opacity .14s var(--ease); pointer-events: none;
+}
+.page-org:hover .page-src { opacity: 1; }
+
+.org-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; display: flex;
+    justify-content: center; gap: 3px; padding: 5px 4px;
+    background: linear-gradient(to top, rgba(5,6,10,.85), rgba(5,6,10,0));
+    opacity: 0; transform: translateY(4px);
+    transition: opacity .14s var(--ease), transform .16s var(--ease);
+}
+.org-bar-top { bottom: auto; top: 0; padding: 4px;
+    background: linear-gradient(to bottom, rgba(5,6,10,.85), rgba(5,6,10,0)); }
+.page-org:hover .org-bar, .page-org:focus-within .org-bar { opacity: 1; transform: none; }
+@media (hover: none) { .org-bar { opacity: 1; transform: none; } }
+
+.org-btn {
+    width: 24px; height: 24px; padding: 0; border: none; border-radius: 6px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.92); color: #10131c;
+    transition: background .13s var(--ease), color .13s var(--ease), transform .13s var(--ease);
+}
+.org-btn svg { width: 13px; height: 13px; }
+.org-btn:hover { background: var(--tool); color: #05060a; transform: scale(1.1); }
+.org-btn.danger:hover { background: var(--red); color: #fff; }
+
 /* ── Options ──────────────────────────────────────────────────────────────── */
 .opt-grid { display: grid; gap: 9px; }
 .radio {
@@ -547,6 +592,11 @@ html, body {
 :root[data-theme="light"] .page-n { background: rgba(255,255,255,.9); color: #10131c; border: 1px solid var(--line); }
 :root[data-theme="light"] .diag pre { background: var(--surface-2); }
 :root[data-theme="light"] .page-skel { background: linear-gradient(100deg, #eef1f8 30%, #e3e8f2 50%, #eef1f8 70%); }
+/* The organize bars are a scrim over a white page, so they stay dark in both
+   themes — but the origin chip sits on the page itself and has to flip. */
+:root[data-theme="light"] .page-src { background: rgba(255,255,255,.92); color: #10131c;
+    border: 1px solid var(--line); }
+:root[data-theme="light"] .org-btn { background: rgba(255,255,255,.96); }
 
 /* ── Theme toggle ─────────────────────────────────────────────────────────── */
 .theme-btn {
